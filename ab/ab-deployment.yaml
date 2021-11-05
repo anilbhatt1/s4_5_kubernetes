@@ -1,0 +1,48 @@
+# We are creating a kubernetes deployment for mongodb
+apiVersion: apps/v1
+kind: Deployment  # Indicates what kind of kubernetes component we are dealing with
+metadata:
+  name: ab-mongo-deployment  # Name of kubernetes deployment. This is what we will get when we give "kubectl get deployments"
+  labels:
+    app: ab-mongo
+spec:
+  selector:
+    matchLabels:
+      app: ab-mongo  # This should match exactly with "app" provided under "labels" above
+  replicas: 1
+  template:       # template to create the pod. Pod hosts container/s
+    metadata:
+      labels:
+        app: ab-mongo # This should match exactly with "app" provided under "labels" above
+    spec:
+      containers:
+      - name: ab-mongo-db # name of container
+        image: mongo # Desired image name from docker hub. Can give only those available for download from docker hub, not random names
+        ports:
+        - containerPort: 27017 # We got the container Port for "mongo" image from docker hub
+        env: # We are giving environment variables here
+        - name: MONGO_INITDB_ROOT_USERNAME # We take this username field for "mongo" image from docker hub. Cant give any random names
+          valueFrom: # This section deals with from where this env variable will get value from
+            secretKeyRef: # This indicates that values will come from kubernetes secret
+              name: ab-mongo-secret # Name of secret from which "key" for env "name" specified above need to be fetched
+              key: ab-mongo-root-username
+              # This name "ab-mongo-root-username" should exactly match with that in secret. Will fetch value for this key from secret
+        - name: MONGO_INIT_ROOT_PASSWORD # We took this password field for "mongo" image from docker hub. Cant give any random names
+          valueFrom:
+            secretKeyRef:
+              name: ab-mongo-secret
+              key: ab-mongo-root-password # This name "ab-mongo-root-password" should exactly match with that in secret
+---
+# We are including service yaml that is going to use above deployment in same file as below
+apiVersion: v1
+kind: Service
+metadata:
+  name: ab-mongo-service  # Name of kubernetes service. This is what we will get when we give "kubectl get services"
+spec:
+  selector:
+    app: ab-mongo
+    # This should match with "app" name we given in deployment. This indicates that this "service" is going to use "app" in deployment.
+  ports:
+  - protocol: TCP
+    port: 27017     # This needs to be same as containerPort provided in deployment
+    targetPort: 27017  # This can be different but here we choose to give same port

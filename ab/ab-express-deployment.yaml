@@ -1,0 +1,64 @@
+# We created deployment for mongodb in ab-deployment.yaml file
+# Now to interact with mongodb we need an admin interface. This is called mongo-express.
+# So, here we are creating a mongo-express deployment that will help us to interact with mongodb created via ab-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anilbhatt-mongo-express-deployment
+  labels:
+    app: anilbhatt-mongo-express
+spec:
+  selector:
+    matchLabels:
+      app: anilbhatt-mongo-express
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: anilbhatt-mongo-express
+    spec:
+      containers:
+      - name: ab-mongo-express # Name of mongo-express container
+        image: mongo-express # From docker hub. Can give only those available for download from docker hub, not random names
+        ports:
+        - containerPort: 8081 # We got the container Port for "mongo-express" image from docker hub
+        env:
+        - name: ME_CONFIG_MONGODB_ADMINUSERNAME # We take this username field for "mongo-express" image from docker hub. Cant give any random names
+          valueFrom:
+            secretKeyRef:
+              name: ab-mongo-secret
+              key: ab-mongo-root-username
+        - name: ME_CONFIG_MONGODB_ADMINPASSWORD # We take this password field for "mongo-express" image from docker hub. Cant give any random names
+          valueFrom:
+            secretKeyRef:
+              name: ab-mongo-secret
+              key: ab-mongo-root-username
+        # Both the above env variables will use the same username and password that we created in service ab-secret.yaml
+        # Please remember that mongo-express is just a means to reach the underlying mongo-db. Hence username & pwd essentially will be same
+        # Only MONGO_INITDB_ROOT_USERNAME changes to ME_CONFIG_MONGODB_ADMINUSERNAME and
+        # MONGO_INIT_ROOT_PASSWORD changes to ME_CONFIG_MONGODB_ADMINPASSWORD
+        - name: ME_CONFIG_MONGODB_SERVER # We take this server field for "mongo-express" image from docker hub. Cant give any random names
+        # mongo-express is to interact with mongo-db. Hence we need to provide the mongo-db server details that mongo-express
+        # needs to interact with. To achieve this, we will tell express to refer to kubernetes service that we coupled with mongo-db deployment.
+        # We will store these details in a kubernetes configmap & fetch from there.
+          valueFrom:
+            configMapKeyRef: # This indicates that values will come from kubernetes configmap
+              name: ab-mongo-configmap # Name of configMap from which "key" for server specified above need to be fetched
+              key: database-url
+---
+# Above created mongo-express deployment will interact with mongo-db via mongo-db service - ab-mongo-service
+# Now, we need to make mongo-express exposed to outside world. For that we will use a service as below
+apiVersion: v1
+kind: Service
+metadata:
+  name: anilbhatt-mongo-express-service  # Name of kubernetes service. This is what we will get when we give "kubectl get services"
+spec:
+  selector:
+    app: anilbhatt-mongo-express
+    # This should match with "app" name we given in deployment. This indicates that this "service" is going to use "app" in deployment.
+  type: LoadBalancer # This must be given to indicate that this service interacts with outside world
+  ports:
+  - protocol: TCP
+    port: 8081     # This needs to be same as containerPort provided in deployment
+    targetPort: 8081  # This can be different but here we choose to give same port
+    nodePort: 30000 # This is the port exposed to outside world. Valid range is 30000 - 32757

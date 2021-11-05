@@ -1,0 +1,8 @@
+.env
+/.idea
+/*/.idea
+*.xml
+*.pt
+/test
+/__pycache__
+/anilbhatt

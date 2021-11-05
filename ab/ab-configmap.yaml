@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap # Indicates what kind of kubernetes component we are dealing with
+metadata:
+  name: ab-mongo-configmap # We will refer this name in deployment wherever this configmap is used to fetch details
+data:
+  database-url: ab-mongo-service
+  # We are giving the kubernetes service we coupled with mongo-db deployment so that server details can be fetched
+  # while thsi configMap gets called from express deployment

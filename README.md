@@ -5,9 +5,10 @@
 - Additionally mongo-express is exposed to outside world also via kubernetes service using **nodePort**
 - Flow diagram
 
-[Flow](https://github.com/anilbhatt1/s4_5_kubernetes)
+![Flow](https://github.com/anilbhatt1/s4_5_kubernetes/blob/master/Flow_Diagram.jpg)
+
 - Initial Version : mongo folder
 - Customized Version : ab folder
 - Screenshot of customized minikube service for mongodb-express running shown as below:
 
-[Service Running](https://github.com/anilbhatt1/s4_5_kubernetes)
+![Service Running](https://github.com/anilbhatt1/s4_5_kubernetes/blob/master/ab/Service_Running_Screenshot.png)
